@@ -21,6 +21,6 @@ class Relation {
   Relation(this.c1, this.c2, this.type);
 }
 
-enum Class { M1, M2 }
+enum Class { m1, m2 }
 
 enum RelationType { oneToMany, onToOne, manyToMany }

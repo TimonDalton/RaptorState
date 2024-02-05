@@ -29,17 +29,17 @@ import '../models/dataModels.dart';
 Future<M1> getM1(String id) async {
   await Future.delayed(Duration(milliseconds: 300));
   String resp = backendHttpGet('M1/$id');
-  return M1.fromJSON(resp);
+  return M1(value: []);
 }
 
 Future<M2> getM1Child(String parent_id, String id) async {
   await Future.delayed(Duration(milliseconds: 300));
   String resp = backendHttpGet('M2/$parent_id/$id');
-  return M2.fromJSON(resp);
+  return M2.fromJson(resp);
 }
 
 Future<M2> getM2(String id) async {
   await Future.delayed(Duration(milliseconds: 300));
   String resp = backendHttpGet('M2/$id');
-  return M2.fromJSON(resp);
+  return M2.fromJson(resp);
 }
