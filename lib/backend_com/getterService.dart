@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'backendSim.dart';
 import '../models/dataModels.dart';
 
@@ -26,20 +28,52 @@ import '../models/dataModels.dart';
 //   }
 // }
 
-Future<M1> getM1(String id) async {
+Future<Map<String, dynamic>> getM0(String id) async {
   await Future.delayed(Duration(milliseconds: 300));
-  String resp = backendHttpGet('M1/$id');
-  return M1(value: []);
+  dynamic resp = backendHttpGet('M0/$id');
+  return resp;
 }
 
-Future<M2> getM1Child(String parent_id, String id) async {
+Future<Map<String, dynamic>> getM0Child(String parent_id, String id) async {
   await Future.delayed(Duration(milliseconds: 300));
-  String resp = backendHttpGet('M2/$parent_id/$id');
-  return M2.fromJson(resp);
+  dynamic resp = backendHttpGet('M0/$parent_id/$id');
+  return resp;
 }
 
-Future<M2> getM2(String id) async {
+Future<Map<String, dynamic>> getAllM0() async {
   await Future.delayed(Duration(milliseconds: 300));
-  String resp = backendHttpGet('M2/$id');
-  return M2.fromJson(resp);
+  dynamic resp = backendHttpGet('M0');
+  return resp;
+}
+
+Future<Map<String, dynamic>> getM1(String id) async {
+  await Future.delayed(Duration(milliseconds: 300));
+  dynamic resp = backendHttpGet('M1/$id');
+  return resp;
+}
+
+Future<Map<String, dynamic>> getM1Child(String parent_id, String id) async {
+  await Future.delayed(Duration(milliseconds: 300));
+  dynamic resp = backendHttpGet('M0/$parent_id/$id');
+  return resp;
+}
+
+Future<Map<String, dynamic>> getAllM1() async {
+  await Future.delayed(Duration(milliseconds: 300));
+  dynamic resp = backendHttpGet('M1');
+  return resp;
+}
+
+Future<Map<String, dynamic>> getM2(String id) async {
+  await Future.delayed(Duration(milliseconds: 300));
+  dynamic resp = backendHttpGet('M2/$id');
+  return resp;
+}
+
+Future<Map<String, dynamic>> getAllM2() async {
+  await Future.delayed(Duration(milliseconds: 300));
+  dynamic ret = backendHttpGet('M2');
+  print('M2 Decoded');
+  print(ret);
+  return ret;
 }

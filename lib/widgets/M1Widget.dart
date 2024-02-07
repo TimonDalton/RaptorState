@@ -23,19 +23,21 @@ class _M1WidgeState<T> extends State<M1Widge> {
   Widget build(BuildContext context) {
     if (widget.dataItem == null) {
       widget.dataItem = LocalDataStore.generateDataItem(
-          Updater<M1>(
-              (newVal) {
-                //setter
-                setState(() {
-                  widget.m1.value = newVal.value;
-                });
-              },
-              M1.fromJson,
-              () {
-                setState;
-              }),
-          PathIDGenerator.getNewId(PathNamingWidget.of(context)!.path),
-          ValueStore<M1>(widget.m1));
+        Updater<M1>(
+            (newVal) {
+              //setter
+              setState(() {
+                widget.m1.value = newVal.value;
+              });
+            },
+            M1.fromJson,
+            () {
+              setState;
+            }),
+        PathIDGenerator.getNewId(PathNamingWidget.of(context)!.path),
+        ValueStore<M1>(value: widget.m1),
+        IdRequest(id: ''),
+      );
       print('');
     }
     double vw = MediaQuery.of(context).size.width / 100.00;
@@ -89,19 +91,21 @@ class _M1_ChildWidgeState<T> extends State<M1_ChildWidge> {
   @override
   Widget build(BuildContext context) {
     widget.dataItem = LocalDataStore.generateDataItem(
-        Updater<M1_Child>(
-            (newVal) {
-              //setter
-              setState(() {
-                widget.m1_child.value = newVal.value;
-              });
-            },
-            M1_Child.fromJson,
-            () {
-              setState;
-            }),
-        PathIDGenerator.getNewId(PathNamingWidget.of(context)!.path),
-        ValueStore<M1_Child>(widget.m1_child));
+      Updater<M1_Child>(
+          (newVal) {
+            //setter
+            setState(() {
+              widget.m1_child.value = newVal.value;
+            });
+          },
+          M1_Child.fromJson,
+          () {
+            setState;
+          }),
+      PathIDGenerator.getNewId(PathNamingWidget.of(context)!.path),
+      ValueStore<M1_Child>(value: widget.m1_child),
+      IdRequest(id: ''),
+    );
     double vw = MediaQuery.of(context).size.width / 100.00;
     return PathNamingWidget(
         key: UniqueKey(),

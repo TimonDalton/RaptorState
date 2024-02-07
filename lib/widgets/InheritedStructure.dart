@@ -20,17 +20,3 @@ class PathNamingWidget extends InheritedWidget {
     return oldWidget.path != path;
   }
 }
-
-//Reading InheritedWidget
-class PathReadingWidget extends StatelessWidget {
-  const PathReadingWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 500,
-      width: 500,
-      child: Text(PathNamingWidget.of(context)!.path),
-    );
-  }
-}

@@ -22,25 +22,27 @@ class _M2WidgeState<T> extends State<M2Widge> {
   Widget build(BuildContext context) {
     if (widget.dataItem == null) {
       widget.dataItem = LocalDataStore.generateDataItem<M2>(
-          Updater<M2>(
-              //setter
-              (newVal) {
-                print('setter called');
-                setState(() {
-                  widget.dataItem!.data.value.value = newVal.value;
-                  print(
-                      'M2 Set State Called: OLD VALUE: ${widget.dataItem!.data.value.value}, NEW VALUE: ${newVal.value}');
-                });
-              },
-              //fromJSON
-              M2.fromJson,
-              //setStateCallback
-              () {
-                setState;
-              }),
-          // PathIDGenerator.getNewId(null),
-          PathIDGenerator.getNewId(PathNamingWidget.of(context)!.path),
-          ValueStore(widget.m2));
+        Updater<M2>(
+            //setter
+            (newVal) {
+              print('setter called');
+              setState(() {
+                widget.dataItem!.data.value!.value = newVal.value;
+                print(
+                    'M2 Set State Called: OLD VALUE: ${widget.dataItem!.data.value!.value}, NEW VALUE: ${newVal.value}');
+              });
+            },
+            //fromJSON
+            M2.fromJson,
+            //setStateCallback
+            () {
+              setState;
+            }),
+        // PathIDGenerator.getNewId(null),
+        PathIDGenerator.getNewId(PathNamingWidget.of(context)!.path),
+        ValueStore(value: widget.m2),
+        IdRequest(id: ''),
+      );
       print('');
     }
     double vw = MediaQuery.of(context).size.width / 100.00;
@@ -51,7 +53,7 @@ class _M2WidgeState<T> extends State<M2Widge> {
         onTap: () {
           // LocalDataStore.dataItems.where((item) => false)
           widget.dataItem!.updater.widgetSetter(M2(
-              value: (int.parse(widget.dataItem!.data.value.value) + 1)
+              value: (int.parse(widget.dataItem!.data.value!.value) + 1)
                   .toString()));
         },
         child: Container(
@@ -59,7 +61,7 @@ class _M2WidgeState<T> extends State<M2Widge> {
           height: 8 * vw,
           color: Colors.blue,
           child: widget.dataItem != null
-              ? Text(widget.dataItem!.data.value.value)
+              ? Text(widget.dataItem!.data.value!.value)
               : Text('??'),
         ),
       ),

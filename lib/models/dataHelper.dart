@@ -2,24 +2,31 @@ import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:flutter/widgets.dart';
+import 'package:giglee_frontend_state_management_iterations/backend_com/backendSim.dart';
 import 'package:giglee_frontend_state_management_iterations/models/dataModels.dart';
+import './dataModels.dart';
 
-class ValueStore<T> {
-  T value;
-  ValueStore(this.value);
+class ValueStore<RequestableModel> {
+  RequestableModel? value;
+  ValueStore({this.value});
 }
 
 class Updater<T> {
   void Function(dynamic newVal) widgetSetter;
-  T Function(String json) fromJson;
+  T Function(Map<String, dynamic> json) fromJson;
   Function() setStateCallback;
   Updater(this.widgetSetter, this.fromJson, this.setStateCallback);
-  updateWithData(String json) {
+  updateWithData(dynamic data) {
     try {
-      T newVal = fromJson(json);
-      widgetSetter(newVal);
-      setStateCallback();
-      print('updateWithData');
+      if (data is T) {
+        widgetSetter(data as T);
+        setStateCallback();
+        print('updateWithData');
+      } else {
+        T newVal = fromJson(data);
+        widgetSetter(newVal);
+        setStateCallback();
+      }
     } catch (e) {
       print(
           'Error with dataHelper converting to ${T.toString()} from: $json :::::::: at');
@@ -29,19 +36,53 @@ class Updater<T> {
   }
 }
 
+enum DataItemState { done, loading, error }
+
 class DataItem<T> {
   Updater updater;
   String internalIdPath;
   ValueStore<T> data;
+  InternalRequest resourceRequest;
+  DataItemState state = DataItemState.loading;
 
-  testPrint() {
-    print('-----------------------');
+  void queueForUpdate() async {
+    bool hasError = false;
+    if (this.resourceRequest.runtimeType == DescribedRequest) {
+      DescribedRequest req = resourceRequest as DescribedRequest;
+      Map<String, dynamic> data = {};
+      try {
+        data = await RequestStore.requestData(req.request);
+      } catch (e) {
+        print('Error at ${StackTrace.current.toString()} of :');
+        print(e);
+        hasError = true;
+      }
+      updater.updateWithData(data);
+    } else if (this.resourceRequest.runtimeType == IdRequest) {
+      IdRequest req = resourceRequest as IdRequest;
+      Map<String, dynamic> data = {};
+      try {
+        data = await RequestStore.requestData(req.id);
+      } catch (e) {
+        print('Error at ${StackTrace.current.toString()} of :');
+        print(e);
+        hasError = true;
+      }
+      updater.updateWithData(data);
+    }
+    if (hasError) {
+      state = DataItemState.error;
+    } else {
+      state = DataItemState.done;
+    }
   }
 
-  DataItem(
-      {required this.updater,
-      required this.internalIdPath,
-      required this.data});
+  DataItem({
+    required this.updater,
+    required this.internalIdPath,
+    required this.data,
+    required this.resourceRequest,
+  });
 }
 
 class StoreItem {
@@ -55,32 +96,20 @@ class StoreItem {
 class LocalDataStore {
   static List<DataItem> dataItems = [];
 
-  static DataItem<T> generateDataItem<T>(
-      Updater updater, String internalIdPath, ValueStore<T> data) {
+  static DataItem<T> generateDataItem<T>(Updater updater, String internalIdPath,
+      ValueStore<T> data, InternalRequest resourceRequest) {
     dataItems.add(DataItem<T>(
-        updater: updater, internalIdPath: internalIdPath, data: data));
+      updater: updater,
+      internalIdPath: internalIdPath,
+      data: data,
+      resourceRequest: resourceRequest,
+    ));
     return dataItems.last as DataItem<T>;
   }
 
   static rondomlyChange() async {
-    print('dataItems length: ${dataItems.length}');
-    if (dataItems.length > 0) {
-      dataItems.first.testPrint;
-    }
-    print('Inside rondomlyChange');
     await Future.delayed(Duration(seconds: 1));
-    print('RandomlyChange: 1s wait');
 
-    print('dataItems length: ${dataItems.length}');
-    if (dataItems.length > 0) {
-      dataItems.first.testPrint;
-    }
-    print('Testing Normal Functions');
-    // print(dataItems[0].runtimeType);
-    // print(dataItems[0].updater.runtimeType);
-    // print(dataItems[0].updater.widgetSetter.runtimeType);
-    // dataItems.first.updater.widgetSetter(M2(value: '22'));
-    print(dataItems.first.data.value);
     for (int c = 0; c < 10; c++) {
       await Future.delayed(Duration(milliseconds: 500)).then((value) {
         for (int i = 0; i < dataItems.length; i++) {
@@ -144,3 +173,84 @@ class PathIDGenerator {
     return i.toString();
   }
 }
+
+class StateBuilders {
+  Widget Function(dynamic data) dataBuilder;
+  Widget waitingWidget;
+  Widget errorWidget;
+
+  StateBuilders({
+    required this.dataBuilder,
+    required this.waitingWidget,
+    required this.errorWidget,
+  });
+}
+
+List<String> extractIds(Map<String, dynamic> map) {
+  List<String> keys = map.keys.toList();
+  List<String> subKeys = [];
+  for (int i = 0; i < keys.length; i++) {
+    subKeys.addAll(extractIds(map[keys[i]]));
+  }
+  keys.addAll(subKeys);
+  return keys;
+}
+
+class RequestStore {
+  static Map<String, StoredRequest> storedRequests = {};
+  static void initialiseStoredRequests() {}
+  static Future<Map<String, dynamic>> requestData(String req) async {
+    if (storedRequests[req] != null) {
+      return storedRequests[req]!.storedValue;
+    }
+    Map<String, dynamic> data = await backendRequest(req);
+
+    storedRequests.addAll({
+      req: StoredRequest(
+        associatedIds: extractIds(data),
+        storedValue: data,
+      )
+    });
+    return data;
+  }
+}
+
+abstract class InternalRequest {
+  static DescribedRequest describedRequest(String request, String? parentId) {
+    return DescribedRequest(request: request, parentId: parentId);
+  }
+
+  static IdRequest idRequest(String id) {
+    return IdRequest(id: id);
+  }
+}
+
+class DescribedRequest implements InternalRequest {
+  String? parentId;
+  String request;
+  DescribedRequest({required this.request, this.parentId});
+}
+
+class IdRequest implements InternalRequest {
+  String id;
+  IdRequest({required this.id});
+}
+
+class StoredRequest {
+  late DateTime lastUpdated;
+  List<String> associatedIds;
+  //THIS SHOULD BE REMOVED AND MOVED TO A PERSISTENT DATA STORE AFTER TESTING
+  Map<String, dynamic> storedValue;
+
+  StoredRequest(
+      {required this.associatedIds,
+      this.storedValue = const {},
+      DateTime? lastUpdated}) {
+    this.lastUpdated = lastUpdated ?? DateTime.now();
+  }
+}
+
+// class PendingRequest {
+//   List<String> associatedIds;
+//   PendingRequest({required this.associatedIds});
+// }
