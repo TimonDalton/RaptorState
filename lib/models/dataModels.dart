@@ -16,6 +16,10 @@ class M0 implements RequestableModel {
     });
     return M0(value: children);
   }
+
+  static Map<String, dynamic> toJson(M0 value) {
+    return {};
+  }
 }
 
 class M0_Child implements RequestableModel {
@@ -29,6 +33,10 @@ class M0_Child implements RequestableModel {
     });
     return M0_Child(value: children);
   }
+
+  static Map<String, dynamic> toJson(M0_Child value) {
+    return {};
+  }
 }
 
 class M0_GrandChild implements RequestableModel {
@@ -38,6 +46,10 @@ class M0_GrandChild implements RequestableModel {
   static M0_GrandChild fromJson(Map<String, dynamic> json) {
     return M0_GrandChild(value: json['value']);
   }
+
+  static Map<String, dynamic> toJson(M0_GrandChild value) {
+    return {};
+  }
 }
 
 class M1 implements RequestableModel {
@@ -45,11 +57,18 @@ class M1 implements RequestableModel {
   M1({required this.value});
 
   static M1 fromJson(Map<String, dynamic> json) {
+    print('M1 FROM JSON got json: ${json}');
     List<M1_Child> children = [];
     json.forEach((key, value) {
-      children.add(M1_Child(value: value));
+      if (key != 'id') {
+        children.add(M1_Child.fromJson(value));
+      }
     });
     return M1(value: children);
+  }
+
+  static Map<String, dynamic> toJson(M1 value) {
+    return {};
   }
 }
 
@@ -60,6 +79,10 @@ class M1_Child implements RequestableModel {
   static M1_Child fromJson(Map<String, dynamic> json) {
     return M1_Child(value: json['value']);
   }
+
+  static Map<String, dynamic> toJson(M1_Child value) {
+    return {};
+  }
 }
 
 class M2 implements RequestableModel {
@@ -67,10 +90,11 @@ class M2 implements RequestableModel {
   M2({required this.value});
 
   static M2 fromJson(Map<String, dynamic> json) {
+    print('M2 FROM JSON: json|${json}');
     return M2(value: json['value']);
   }
 
-  String toJson() {
-    return jsonEncode(this);
+  static Map<String, dynamic> toJson(M2 value) {
+    return {};
   }
 }

@@ -4,69 +4,138 @@ import 'package:giglee_frontend_state_management_iterations/backend_com/getterSe
 import '../models/dataModels.dart';
 // import '../models/loadable.dart';
 import 'dart:convert';
+import '../global.dart';
+import 'package:http/http.dart' as http;
 
 Map<String, dynamic> UUID_Uri_Map = {};
 
 final dataKept = {
-  'M0': {
-    'M0_ID_38': {
-      'M0_ID_38_child_1': 0,
-      'M0_ID_38_child_2': 2,
-      'M0_ID_38_child_3': 3,
-      'M0_ID_38_child_4': 4,
+  'M0': [
+    {
+      'type': 'M0',
+      'id': 'M0_ID_37',
+      'children': [
+        {
+          'type': 'M0_Child',
+          'id': 'M0_Child_ID_38',
+          'children': {
+            'M0_Child_ID_38_1': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_38_1',
+              'value': 0
+            },
+            'M0_Child_ID_38_2': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_38_2',
+              'value': 2
+            },
+            'M0_Child_ID_38_3': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_38_3',
+              'value': 3
+            },
+            'M0_Child_ID_38_4': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_38_4',
+              'value': 4
+            },
+          },
+        },
+        {
+          'type': 'M0_Child',
+          'id': 'M0_Child_ID_39',
+          'children': {
+            'M0_Child_ID_39_1': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_39_1',
+              'value': 10
+            },
+            'M0_Child_ID_39_2': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_39_2',
+              'value': 12
+            },
+            'M0_Child_ID_39_3': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_39_3',
+              'value': 13
+            },
+            'M0_Child_ID_39_4': {
+              'type': 'M0_Grandchild',
+              'id': 'M0_Child_ID_39_4',
+              'value': 14
+            },
+          },
+        },
+      ]
     },
-    'M0_ID_39': {
-      'M0_ID_39_child_1': 5,
-      'M0_ID_39_child_2': 2,
-      'M0_ID_39_child_3': 3,
-      'M0_ID_39_child_4': 4,
+  ],
+  'M1': [
+    {
+      'type': 'M0_Child',
+      'id': 'M1_ID_42',
+      'children': [
+        {'type': 'M1_Child', 'id': 'M1_ID_42_child_1', 'value': 0},
+        {'type': 'M1_Child', 'id': 'M1_ID_42_child_2', 'value': 1},
+        {'type': 'M1_Child', 'id': 'M1_ID_42_child_3', 'value': 2},
+        {'type': 'M1_Child', 'id': 'M1_ID_42_child_4', 'value': 3},
+      ],
     },
-    'M0_ID_40': {
-      'M0_ID_40_child_1': 6,
-      'M0_ID_40_child_2': 2,
-      'M0_ID_40_child_3': 3,
-      'M0_ID_40_child_4': 4,
+  ],
+  'M2': [
+    {
+      'type': 'M2',
+      'id': 'M2_ID_54',
+      'value': '1',
     },
-    'M0_ID_41': {
-      'M0_ID_41_child_1': 7,
-      'M0_ID_41_child_2': 2,
-      'M0_ID_41_child_3': 3,
-      'M0_ID_41_child_4': 4,
+    {
+      'type': 'M2',
+      'id': 'M2_ID_55',
+      'value': '2',
     },
-  },
-  'M1': {
-    'M1_ID_42': {
-      'M1_ID_42_child_1': 0,
-      'M1_ID_42_child_2': 2,
-      'M1_ID_42_child_3': 3,
-      'M1_ID_42_child_4': 4,
+    {
+      'type': 'M2',
+      'id': 'M2_ID_56',
+      'value': '3',
     },
-  },
-  'M2': {
-    'M2_ID_54': '1',
-    'M2_ID_55': '2',
-    'M2_ID_56': '3',
-    'M2_ID_57': '4',
-  },
+    {
+      'type': 'M2',
+      'id': 'M2_ID_57',
+      'value': '4',
+    },
+  ],
 };
 
-int counter = 100;
-String generateId() {
-  counter++;
-  return counter.toString();
-}
+// Future<dynamic> fetchFromBackend() async {}
 
 Future<Map<String, dynamic>> backendRequest(String req) async {
-  switch (req) {
-    case 'M0/*':
-      return backendHttpGet('M0');
-    case 'M1/*':
-      return backendHttpGet('M1');
-    case 'M2/*':
-      return backendHttpGet('M2');
-    default:
-      return backendHttpGet(req);
+  String requestStr = "${baseUrl}/api/$req";
+  print('Request From Frontend: ${requestStr}');
+  return backendHttpGet(req);
+  var res = await http.get(
+    Uri.parse(
+      requestStr,
+    ),
+  );
+  if (res.statusCode == 200) {
+    // List<dynamic> eventList = jsonToEventObjList(jsonDecode(res.body));
+    return json.decode(res.body);
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('"Failed to fetch events error: ${res.statusCode}"');
   }
+
+  // switch (req) {
+  //   case 'M0/*':
+  //     return backendHttpGet('M0');
+  //   case 'M1/*':
+  //     return backendHttpGet('M1');
+  //   case 'M2/*':
+  //     return backendHttpGet('M2');
+  //   default:
+  //     return backendHttpGet(req);
+  // }
 }
 
 Map<String, dynamic> backendHttpGet(String req) {
@@ -80,26 +149,39 @@ Map<String, dynamic> backendHttpGet(String req) {
   }
   List<String> tokens = req.split('/');
   print('Tokens: ${tokens}');
-  try {
-    print('Kept Data: ');
-    print(dataKept);
-    dynamic curData = dataKept[tokens[0]];
-    print('CurData: ');
-    print(curData);
-    for (int i = 1; i < tokens.length; i++) {
-      if (tokens[i] == '*') {
-        return curData;
-      } else {
-        curData = curData[tokens[i]]!;
+  // try {
+  dynamic curData = dataKept[tokens[0]];
+  for (int i = 1; i < tokens.length; i++) {
+    if (tokens[i] == '*') {
+      return curData;
+    } else {
+      curData = curData[tokens[i]]!;
+    }
+  }
+  return curData;
+  // } catch (e) {
+  //   print('DB Sim Caught error: ');
+  //   print(e);
+  // }
+}
+
+Map<String, dynamic> backendGetSpecificKey(String key) {
+  return searchKey(key, dataKept);
+}
+
+Map<String, dynamic> searchKey(String key, Map<String, dynamic> submap) {
+  if (submap.keys.contains(key)) {
+    return {key: submap[key]};
+  } else {
+    for (int i = 0; i < submap.keys.length; i++) {
+      Map<String, dynamic> res =
+          searchKey(key, submap[submap.keys.toList()[i]]);
+      if (res.keys.first == key) {
+        return res;
       }
     }
-    return curData;
-  } catch (e) {
-    print('DB Sim Caught error: ');
-    print(e);
   }
-
-  return ret;
+  return {};
 }
 
 

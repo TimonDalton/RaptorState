@@ -1,8 +1,8 @@
 import 'dart:convert';
-
+import '../global.dart';
 import 'backendSim.dart';
 import '../models/dataModels.dart';
-
+import 'package:http/http.dart' as http;
 // Future<T> getterService<T>(String id) async {
 //   await Future.delayed(Duration(milliseconds: 300));
 //   dataKept.

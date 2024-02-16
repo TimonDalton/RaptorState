@@ -20,3 +20,7 @@ class PathNamingWidget extends InheritedWidget {
     return oldWidget.path != path;
   }
 }
+
+String getParentId(BuildContext context) {
+  return PathNamingWidget.of(context)!.path.split('/').last;
+}

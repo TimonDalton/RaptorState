@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:giglee_frontend_state_management_iterations/onAppInit.dart';
 import 'package:giglee_frontend_state_management_iterations/pages/homepage.dart';
 import 'global.dart';
+import './testScript.dart';
 
 void main() {
+  testScript();
   onInit();
-  runApp(const MyApp());
+  // runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

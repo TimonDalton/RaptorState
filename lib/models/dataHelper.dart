@@ -4,253 +4,162 @@ import 'dart:ffi';
 import 'package:flutter/widgets.dart';
 import 'package:giglee_frontend_state_management_iterations/backend_com/backendSim.dart';
 import 'package:giglee_frontend_state_management_iterations/models/dataModels.dart';
+import 'fromJsonTypeMap.dart';
 import './dataModels.dart';
+import './localRequests.dart';
+import './stringToConstructorTypeMap.dart';
 
-class ValueStore<RequestableModel> {
-  RequestableModel? value;
+export './localPathId.dart';
+export './localRequests.dart';
+
+class DataItem<T> {
+  List<Updater> updaters;
+  String internalIdPath;
+  ValueStore<T> valueStore;
+  List<RequestHolder> childrenRequests = [];
+  List<DataItem> children = [];
+
+  DataItem({
+    required this.updaters,
+    required this.internalIdPath,
+    required this.valueStore,
+  });
+
+  setData(T newData) {
+    //todo plan: What happens when widget is offscreen? How do I know what to rebuild?
+    //idea: map widgets to their keys, only update what is the newest. Set some of them to should update
+    //on next reload
+    for (int i = 0; i < updaters.length; i++) {
+      updaters[i].widgetSetter(newData);
+    }
+    updateListeningWidgets();
+  }
+
+  String getKey() => internalIdPath.split('/').last;
+  updateListeningWidgets() {
+    for (int i = 0; i < updaters.length; i++) {
+      updaters[i].updateWithData(valueStore.rawJson);
+    }
+  }
+
+  pollForNewData() {}
+
+  static DataItem<T> create<T>(
+      List<Updater> updaters, String internalIdPath, ValueStore<T> valueStore) {
+    return DataItem<T>(
+      valueStore: valueStore,
+      internalIdPath: internalIdPath,
+      updaters: updaters,
+    );
+  }
+}
+
+class ValueStore<T> {
+  T? value;
+  Map<String, dynamic> rawJson = {};
   ValueStore({this.value});
+  processJson([Map<String, dynamic>? newJson]) {
+    if (newJson != null) {
+      rawJson = newJson;
+    }
+    value = typeMatchedFromJson(T)(rawJson);
+  }
+
+  setAndUpdateJson(T newValue) {}
 }
 
 class Updater<T> {
   void Function(dynamic newVal) widgetSetter;
-  T Function(Map<String, dynamic> json) fromJson;
-  Function() setStateCallback;
-  Updater(this.widgetSetter, this.fromJson, this.setStateCallback);
+  Updater(this.widgetSetter);
   updateWithData(dynamic data) {
-    try {
-      if (data is T) {
-        widgetSetter(data as T);
-        setStateCallback();
-        print('updateWithData');
-      } else {
-        T newVal = fromJson(data);
-        widgetSetter(newVal);
-        setStateCallback();
-      }
-    } catch (e) {
-      print(
-          'Error with dataHelper converting to ${T.toString()} from: $json :::::::: at');
-      print(StackTrace.current.toString());
-      print(e);
-    }
-  }
-}
-
-enum DataItemState { done, loading, error }
-
-class DataItem<T> {
-  Updater updater;
-  String internalIdPath;
-  ValueStore<T> data;
-  InternalRequest resourceRequest;
-  DataItemState state = DataItemState.loading;
-
-  void queueForUpdate() async {
-    bool hasError = false;
-    if (this.resourceRequest.runtimeType == DescribedRequest) {
-      DescribedRequest req = resourceRequest as DescribedRequest;
-      Map<String, dynamic> data = {};
-      try {
-        data = await RequestStore.requestData(req.request);
-      } catch (e) {
-        print('Error at ${StackTrace.current.toString()} of :');
-        print(e);
-        hasError = true;
-      }
-      updater.updateWithData(data);
-    } else if (this.resourceRequest.runtimeType == IdRequest) {
-      IdRequest req = resourceRequest as IdRequest;
-      Map<String, dynamic> data = {};
-      try {
-        data = await RequestStore.requestData(req.id);
-      } catch (e) {
-        print('Error at ${StackTrace.current.toString()} of :');
-        print(e);
-        hasError = true;
-      }
-      updater.updateWithData(data);
-    }
-    if (hasError) {
-      state = DataItemState.error;
+    print('Doing updateWithData');
+    if (data is T) {
+      widgetSetter(data as T);
     } else {
-      state = DataItemState.done;
+      T newVal = typeMatchedFromJson(T)(data);
+      widgetSetter(newVal);
     }
   }
-
-  DataItem({
-    required this.updater,
-    required this.internalIdPath,
-    required this.data,
-    required this.resourceRequest,
-  });
 }
 
-class StoreItem {
-  DataItem data;
-  late DateTime lastExternalUpdate;
-  late String externalId;
-  Map<StoreItem, dynamic> map = {};
-  StoreItem(this.data);
+int counter = 100;
+String generateId() {
+  counter++;
+  return counter.toString();
 }
 
 class LocalDataStore {
-  static List<DataItem> dataItems = [];
+  static Map<String, DataItem> dataItems = {};
+  static DataItem? getDataItem(String key) => dataItems[key];
 
-  static DataItem<T> generateDataItem<T>(Updater updater, String internalIdPath,
-      ValueStore<T> data, InternalRequest resourceRequest) {
-    dataItems.add(DataItem<T>(
-      updater: updater,
-      internalIdPath: internalIdPath,
-      data: data,
-      resourceRequest: resourceRequest,
-    ));
-    return dataItems.last as DataItem<T>;
+  static Map<String, String> externalToInternalKeyMap = {};
+
+  static List<String> askServerForChanges() {
+    return [];
   }
 
-  static rondomlyChange() async {
-    await Future.delayed(Duration(seconds: 1));
+  static checkAllForChanges() {
+    List<String> toChange = askServerForChanges();
+  }
 
-    for (int c = 0; c < 10; c++) {
-      await Future.delayed(Duration(milliseconds: 500)).then((value) {
-        for (int i = 0; i < dataItems.length; i++) {
-          switch (dataItems[i].data.value.runtimeType) {
-            case M2:
-              String val = dataItems[i].data.value.value as String;
-              dataItems[i]
-                  .updater
-                  .widgetSetter(M2(value: (int.parse(val) + 1).toString()));
-              break;
-            case M1_Child:
-              // int val = dataItems[i].data as int;
-              // dataItems[i].updater.widgetSetter(M2(value: (val+1).toString()));
-              // int.parse(val);
-              break;
-            default:
-              print('Type: ${dataItems[i].data.value.runtimeType}');
-          }
-        }
-      });
-      print('first M2 at ${c.toString()}:');
-      print((dataItems
-              .where((item) => item.data.value.runtimeType == M2)
-              .first
-              .data
-              .value as M2)
-          .value);
+  ///ASSUME JSON FORMAT{
+  ///  TYPE:...,
+  ///  ID: ...,
+  ///  VALUE: {...,{ID: ...}}
+  ///}
+  ///ID+TYPE MEANS NEW DATA-ITEM
+  static void digestData(Map<String, dynamic> jsonObj,
+      [RequestHolder? requestHolder]) {
+    print('Received Data To Digest: ${jsonObj}');
+    if (requestHolder != null) {
+      print('From Req: ${requestHolder.request}');
     }
+    recursiveDigest(jsonObj, (_) {}, requestHolder);
   }
 
-  // static registerDataItem(DataItem item) {
-  //   item.externalId = asdasdd;
-  // }
+  static Map<String, dynamic> recursiveDigest(Map<String, dynamic> branch,
+      void Function(List<DataItem>) throwChildrenUpTree,
+      [RequestHolder? reqHolder]) {
+    List<DataItem> newChildren = [];
+    //Adds new chldren to this function whenever they are created
+    childrenNewDataItemCallback(List<DataItem> dis) {
+      newChildren.addAll(dis);
+    }
 
-  // String fetchJson(String path) {}
-}
-
-class PathIDGenerator {
-  static Map<String, dynamic> registeredItems = {
-    'count': 0,
-  };
-  static String getNewId(String? parentPath) {
-    List<String> elements =
-        parentPath != null && parentPath != '' ? parentPath.split('/') : [];
-    Map<String, dynamic> map = registeredItems;
-    if (parentPath != null && parentPath != '') {
-      for (int i = 0; i < elements.length - 1; i++) {
-        if (map[elements[i]] == null) {
-          print('parentPath: ${parentPath}');
-        }
-        map = map[elements[i]];
+    Map<String, dynamic> ret = {};
+    List<String> keyList = branch.keys.toList();
+    //Add all keys to subbranch, while replacing new dataItems with a reference.
+    for (int i = 0; i < keyList.length; i++) {
+      String key = keyList[i];
+      if (key == 'id' || key == 'type') {
+        continue;
+      }
+      //if submap, search deeper for replacement
+      if (branch[key].runtimeType == Map<String, dynamic>) {
+        ret[key] = recursiveDigest(branch[key], childrenNewDataItemCallback);
+      } else {
+        //else add normal values
+        ret[key] = branch[key];
       }
     }
-
-    String hash = hashingFunc(map.keys.length);
-    map[hash] = Map<String, dynamic>();
-    return hash;
-  }
-
-  static String hashingFunc(int i) {
-    return i.toString();
-  }
-}
-
-class StateBuilders {
-  Widget Function(dynamic data) dataBuilder;
-  Widget waitingWidget;
-  Widget errorWidget;
-
-  StateBuilders({
-    required this.dataBuilder,
-    required this.waitingWidget,
-    required this.errorWidget,
-  });
-}
-
-List<String> extractIds(Map<String, dynamic> map) {
-  List<String> keys = map.keys.toList();
-  List<String> subKeys = [];
-  for (int i = 0; i < keys.length; i++) {
-    subKeys.addAll(extractIds(map[keys[i]]));
-  }
-  keys.addAll(subKeys);
-  return keys;
-}
-
-class RequestStore {
-  static Map<String, StoredRequest> storedRequests = {};
-  static void initialiseStoredRequests() {}
-  static Future<Map<String, dynamic>> requestData(String req) async {
-    if (storedRequests[req] != null) {
-      return storedRequests[req]!.storedValue;
+    //check valid format
+    assert((keyList.contains('id') && keyList.contains('type')) ||
+        !(keyList.contains('id') || keyList.contains('type')));
+    //if should be replaced by reference
+    if (keyList.contains('id') && keyList.contains('type')) {
+      assert(branch['id'].runtimeType == String);
+      String newId = generateId();
+      externalToInternalKeyMap[branch['id']] = newId;
+      if (reqHolder != null) {
+        reqHolder.ids.add(newId);
+      }
+      dataItems[newId] = createTypedDataItem(branch['type'], [], newId);
+      dataItems[newId]!.valueStore.processJson(ret);
+      dataItems[newId]!.children = newChildren;
+      return {branch['type']: newId};
+    } else {
+      throwChildrenUpTree(newChildren);
     }
-    Map<String, dynamic> data = await backendRequest(req);
-
-    storedRequests.addAll({
-      req: StoredRequest(
-        associatedIds: extractIds(data),
-        storedValue: data,
-      )
-    });
-    return data;
+    return ret;
   }
 }
-
-abstract class InternalRequest {
-  static DescribedRequest describedRequest(String request, String? parentId) {
-    return DescribedRequest(request: request, parentId: parentId);
-  }
-
-  static IdRequest idRequest(String id) {
-    return IdRequest(id: id);
-  }
-}
-
-class DescribedRequest implements InternalRequest {
-  String? parentId;
-  String request;
-  DescribedRequest({required this.request, this.parentId});
-}
-
-class IdRequest implements InternalRequest {
-  String id;
-  IdRequest({required this.id});
-}
-
-class StoredRequest {
-  late DateTime lastUpdated;
-  List<String> associatedIds;
-  //THIS SHOULD BE REMOVED AND MOVED TO A PERSISTENT DATA STORE AFTER TESTING
-  Map<String, dynamic> storedValue;
-
-  StoredRequest(
-      {required this.associatedIds,
-      this.storedValue = const {},
-      DateTime? lastUpdated}) {
-    this.lastUpdated = lastUpdated ?? DateTime.now();
-  }
-}
-
-// class PendingRequest {
-//   List<String> associatedIds;
-//   PendingRequest({required this.associatedIds});
-// }

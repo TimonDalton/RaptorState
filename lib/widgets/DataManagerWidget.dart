@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import '../models/dataModels.dart';
 import '../models/dataHelper.dart';
 import '../widgets/InheritedStructure.dart';
+import '../models/localRequests.dart';
+import 'DataRequestHandler.dart';
 
 class DataManagerWidget<RequestableModel> extends StatefulWidget {
-  final StateBuilders builders;
-  final RequestableModel Function(Map<String, dynamic>) fromJson;
-  late DataItem<RequestableModel> dataItem;
+  final DataItemBuilders builders;
+  DataItem<RequestableModel> dataItem;
   bool initialised = false;
-  InternalRequest request;
 
   DataManagerWidget({
-    required this.request,
     required this.builders,
-    required this.fromJson,
+    required this.dataItem,
   });
   @override
   State<DataManagerWidget<RequestableModel>> createState() =>
@@ -31,37 +30,33 @@ class _DataManagerWidgetState<RequestableModel>
   @override
   Widget build(BuildContext context) {
     if (!widget.initialised) {
-      widget.initialised = true;
-      widget.dataItem = LocalDataStore.generateDataItem<RequestableModel>(
-        Updater<RequestableModel>(
-            //setter
-            (newVal) {
-              setState(() {
-                widget.dataItem.data.value = newVal.value as RequestableModel;
-                print(
-                    'M2 Set State Called: OLD VALUE: ${widget.dataItem.data.value}, NEW VALUE: ${newVal.value}');
-              });
-            },
-            //fromJSON
-            widget.fromJson,
-            //setStateCallback
-            () {
-              setState;
-            }),
-        // PathIDGenerator.getNewId(null),
-        PathIDGenerator.getNewId(PathNamingWidget.of(context)!.path),
-        ValueStore(),
-        widget.request,
+      Updater updater = Updater<RequestableModel>(
+        //setter
+        (newVal) {
+          setState(() {
+            widget.dataItem.valueStore.value = newVal as RequestableModel;
+            print(
+                'M2 Set State Called: OLD VALUE: ${widget.dataItem.valueStore.value}, NEW VALUE: ${newVal}');
+          });
+        },
       );
-      widget.dataItem.queueForUpdate();
+      widget.dataItem.updaters.add(updater);
+      bool noError = true;
+      if (noError) {
+        widget.initialised = true;
+      }
     }
 
     return PathNamingWidget(
       key: UniqueKey(),
-      path: widget.dataItem.internalIdPath,
-      child: (widget.dataItem.state == DataItemState.done)
-          ? widget.builders.dataBuilder(widget.dataItem.data.value)
-          : (widget.dataItem.state == DataItemState.loading)
+      path: PathNamingWidget.of(context) == null
+          ? ''
+          : PathNamingWidget.of(context)!.path +
+              '/' +
+              widget.dataItem.internalIdPath,
+      child: (widget.dataItem.valueStore.value != null)
+          ? widget.builders.dataBuilder(widget.dataItem.valueStore.value)
+          : (widget.dataItem.valueStore.rawJson == {})
               ? widget.builders.waitingWidget
               : widget.builders.errorWidget,
     );
