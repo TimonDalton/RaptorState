@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:giglee_frontend_state_management_iterations/global.dart';
+import 'package:giglee_frontend_state_management_iterations/models/dataHelper.dart';
 
 abstract class RequestableModel {
   // RequestableModel fromJson(Map<String, dynamic> json);
@@ -11,9 +12,10 @@ class M0 implements RequestableModel {
 
   static M0 fromJson(Map<String, dynamic> json) {
     List<M0_Child> children = [];
-    json.forEach((key, value) {
-      children.add(M0_Child(value: value));
+    (json['children'] as List<dynamic>).forEach((el) {
+      children.add(LocalDataStore.dataItems[el['M0_Child']]!.valueStore.value);
     });
+
     return M0(value: children);
   }
 
@@ -28,8 +30,9 @@ class M0_Child implements RequestableModel {
 
   static M0_Child fromJson(Map<String, dynamic> json) {
     List<M0_GrandChild> children = [];
-    json.forEach((key, value) {
-      children.add(M0_GrandChild(value: value));
+    (json['children'] as List<dynamic>).forEach((el) {
+      children
+          .add(LocalDataStore.dataItems[el['M0_Grandchild']]!.valueStore.value);
     });
     return M0_Child(value: children);
   }
@@ -59,10 +62,9 @@ class M1 implements RequestableModel {
   static M1 fromJson(Map<String, dynamic> json) {
     print('M1 FROM JSON got json: ${json}');
     List<M1_Child> children = [];
-    json.forEach((key, value) {
-      if (key != 'id') {
-        children.add(M1_Child.fromJson(value));
-      }
+
+    (json['children'] as List<dynamic>).forEach((el) {
+      LocalDataStore.dataItems[el['M1_Child']];
     });
     return M1(value: children);
   }

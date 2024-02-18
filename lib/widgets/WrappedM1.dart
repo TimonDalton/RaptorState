@@ -64,20 +64,16 @@ class _M1_ChildWrappedWidgeState<T> extends State<M1_ChildWrappedWidge> {
   Widget build(BuildContext context) {
     double vw = MediaQuery.of(context).size.width / 100.00;
     DataItem thisDi = LocalDataStore.dataItems[getParentId(context)]!;
-    return PathNamingWidget(
-      key: UniqueKey(),
-      path: widget.dataItem!.internalIdPath,
-      child: InkWell(
-        onTap: () {
-          thisDi.setData(thisDi.valueStore.value + 1);
-        },
-        child: Container(
-          color: Colors.blueGrey,
-          width: 8 * vw,
-          height: 8 * vw,
-          child: Text(
-            widget.m1_child.value.toString(),
-          ),
+    return InkWell(
+      onTap: () {
+        thisDi.setData(thisDi.valueStore.value + 1);
+      },
+      child: Container(
+        color: Colors.blueGrey,
+        width: 8 * vw,
+        height: 8 * vw,
+        child: Text(
+          widget.m1_child.value.toString(),
         ),
       ),
     );

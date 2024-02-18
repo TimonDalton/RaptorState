@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 
 Map<String, dynamic> UUID_Uri_Map = {};
 
-final dataKept = {
+final Map<String, dynamic> dataKept = json.decode(json.encode({
   'M0': [
     {
       'type': 'M0',
@@ -18,61 +18,29 @@ final dataKept = {
         {
           'type': 'M0_Child',
           'id': 'M0_Child_ID_38',
-          'children': {
-            'M0_Child_ID_38_1': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_38_1',
-              'value': 0
-            },
-            'M0_Child_ID_38_2': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_38_2',
-              'value': 2
-            },
-            'M0_Child_ID_38_3': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_38_3',
-              'value': 3
-            },
-            'M0_Child_ID_38_4': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_38_4',
-              'value': 4
-            },
-          },
+          'children': [
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_38_1', 'value': 0},
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_38_2', 'value': 2},
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_38_3', 'value': 3},
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_38_4', 'value': 4},
+          ],
         },
         {
           'type': 'M0_Child',
           'id': 'M0_Child_ID_39',
-          'children': {
-            'M0_Child_ID_39_1': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_39_1',
-              'value': 10
-            },
-            'M0_Child_ID_39_2': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_39_2',
-              'value': 12
-            },
-            'M0_Child_ID_39_3': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_39_3',
-              'value': 13
-            },
-            'M0_Child_ID_39_4': {
-              'type': 'M0_Grandchild',
-              'id': 'M0_Child_ID_39_4',
-              'value': 14
-            },
-          },
+          'children': [
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_39_1', 'value': 10},
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_39_2', 'value': 12},
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_39_3', 'value': 13},
+            {'type': 'M0_Grandchild', 'id': 'M0_Child_ID_39_4', 'value': 14},
+          ],
         },
       ]
     },
   ],
   'M1': [
     {
-      'type': 'M0_Child',
+      'type': 'M1',
       'id': 'M1_ID_42',
       'children': [
         {'type': 'M1_Child', 'id': 'M1_ID_42_child_1', 'value': 0},
@@ -104,11 +72,11 @@ final dataKept = {
       'value': '4',
     },
   ],
-};
+}));
 
 // Future<dynamic> fetchFromBackend() async {}
 
-Future<Map<String, dynamic>> backendRequest(String req) async {
+Future<dynamic> backendRequest(String req) async {
   String requestStr = "${baseUrl}/api/$req";
   print('Request From Frontend: ${requestStr}');
   return backendHttpGet(req);
@@ -138,7 +106,7 @@ Future<Map<String, dynamic>> backendRequest(String req) async {
   // }
 }
 
-Map<String, dynamic> backendHttpGet(String req) {
+dynamic backendHttpGet(String req) {
   print('Processing Req: $req');
   Map<String, dynamic> ret = {};
   if (req.isEmpty) {

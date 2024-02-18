@@ -5,9 +5,9 @@ import 'global.dart';
 import './testScript.dart';
 
 void main() {
-  testScript();
+  // testScript();
   onInit();
-  // runApp(const MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

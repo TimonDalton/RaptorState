@@ -58,7 +58,7 @@ class ValueStore<T> {
   T? value;
   Map<String, dynamic> rawJson = {};
   ValueStore({this.value});
-  processJson([Map<String, dynamic>? newJson]) {
+  processJson([dynamic? newJson]) {
     if (newJson != null) {
       rawJson = newJson;
     }
@@ -108,8 +108,7 @@ class LocalDataStore {
   ///  VALUE: {...,{ID: ...}}
   ///}
   ///ID+TYPE MEANS NEW DATA-ITEM
-  static void digestData(Map<String, dynamic> jsonObj,
-      [RequestHolder? requestHolder]) {
+  static void digestData(dynamic jsonObj, [RequestHolder? requestHolder]) {
     print('Received Data To Digest: ${jsonObj}');
     if (requestHolder != null) {
       print('From Req: ${requestHolder.request}');
@@ -117,49 +116,78 @@ class LocalDataStore {
     recursiveDigest(jsonObj, (_) {}, requestHolder);
   }
 
-  static Map<String, dynamic> recursiveDigest(Map<String, dynamic> branch,
-      void Function(List<DataItem>) throwChildrenUpTree,
+  static dynamic recursiveDigest(
+      dynamic branch, void Function(List<DataItem>) throwChildrenUpTree,
       [RequestHolder? reqHolder]) {
+    print(
+        'Doing recursiveDigest of ${branch} which has type: ${branch.runtimeType}');
     List<DataItem> newChildren = [];
     //Adds new chldren to this function whenever they are created
     childrenNewDataItemCallback(List<DataItem> dis) {
       newChildren.addAll(dis);
     }
 
-    Map<String, dynamic> ret = {};
-    List<String> keyList = branch.keys.toList();
-    //Add all keys to subbranch, while replacing new dataItems with a reference.
-    for (int i = 0; i < keyList.length; i++) {
-      String key = keyList[i];
-      if (key == 'id' || key == 'type') {
-        continue;
+    if (branch is Map<String, dynamic>) {
+      print('Branch as Map<String,dynamic>: ${branch}');
+      Map<String, dynamic> ret = {};
+      List<String> keyList = branch.keys.toList();
+      //Add all keys to subbranch, while replacing new dataItems with a reference.
+      for (int i = 0; i < keyList.length; i++) {
+        String key = keyList[i];
+        if (key == 'id' || key == 'type') {
+          continue;
+        }
+        //if submap, search deeper for replacement
+        if (branch[key].runtimeType == (Map<String, dynamic>)) {
+          ret[key] = recursiveDigest(branch[key], childrenNewDataItemCallback);
+        } else if (branch[key].runtimeType == (List<dynamic>)) {
+          ret[key] = [];
+          for (int subBranchListCount = 0;
+              subBranchListCount < branch[key].length;
+              subBranchListCount++) {
+            ret[key].add(recursiveDigest(
+                branch[key][subBranchListCount], childrenNewDataItemCallback));
+          }
+        } else {
+          //else add normal values
+          ret[key] = branch[key];
+        }
       }
-      //if submap, search deeper for replacement
-      if (branch[key].runtimeType == Map<String, dynamic>) {
-        ret[key] = recursiveDigest(branch[key], childrenNewDataItemCallback);
+      //check valid format
+      assert((keyList.contains('id') && keyList.contains('type')) ||
+          !(keyList.contains('id') || keyList.contains('type')));
+      //if should be replaced by reference
+      if (keyList.contains('id') && keyList.contains('type')) {
+        print('Branch contains id and type');
+        assert(branch['id'].runtimeType == String);
+        String newId = generateId();
+        externalToInternalKeyMap[branch['id']] = newId;
+        if (reqHolder != null) {
+          print('Adding id to reqHolder: ${newId}');
+          reqHolder.ids.add(newId);
+        }
+        dataItems[newId] = createTypedDataItem(branch['type'], [], newId);
+        print('Sending to process Json: ${ret}');
+        dataItems[newId]!.valueStore.processJson(ret);
+        dataItems[newId]!.children = newChildren;
+
+        throwChildrenUpTree([dataItems[newId]!]);
+        return {branch['type']: newId};
       } else {
-        //else add normal values
-        ret[key] = branch[key];
+        throwChildrenUpTree(newChildren);
       }
-    }
-    //check valid format
-    assert((keyList.contains('id') && keyList.contains('type')) ||
-        !(keyList.contains('id') || keyList.contains('type')));
-    //if should be replaced by reference
-    if (keyList.contains('id') && keyList.contains('type')) {
-      assert(branch['id'].runtimeType == String);
-      String newId = generateId();
-      externalToInternalKeyMap[branch['id']] = newId;
-      if (reqHolder != null) {
-        reqHolder.ids.add(newId);
+      return ret;
+    } else if (branch.runtimeType == List<dynamic>) {
+      print('Branch as List<dynamic>: ${branch}');
+      List<dynamic> ret = [];
+      for (int i = 0; i < branch.length; i++) {
+        ret.add(
+            recursiveDigest(branch[i], childrenNewDataItemCallback, reqHolder));
       }
-      dataItems[newId] = createTypedDataItem(branch['type'], [], newId);
-      dataItems[newId]!.valueStore.processJson(ret);
-      dataItems[newId]!.children = newChildren;
-      return {branch['type']: newId};
+      return ret;
     } else {
-      throwChildrenUpTree(newChildren);
+      print('Found type of ${branch.runtimeType} for branch, return itself.');
+      return branch;
     }
-    return ret;
   }
 }

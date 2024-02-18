@@ -16,7 +16,7 @@ DataItem createTypedDataItem(
     case 'M0_Child':
       return DataItem.create<M0_Child>(
           updaters, internalIdPath, ValueStore<M0_Child>());
-    case 'M0_GrandChild':
+    case 'M0_Grandchild':
       return DataItem.create<M0_GrandChild>(
           updaters, internalIdPath, ValueStore<M0_GrandChild>());
     default:

@@ -7,12 +7,15 @@ class RequestHolder {
   bool fetching = false;
   bool fetched = false;
 
-  Future<void> fetch() async {
+  Future<List<String>> fetch() async {
+    print('In Fetch');
     fetching = true;
-    Map<String, dynamic> data = await backendRequest(request);
+    dynamic data = await backendRequest(request);
     LocalDataStore.digestData(data, this);
     fetching = false;
     fetched = true;
+    print('Finished Fetch');
+    return ids;
   }
 
   void addNewIds(List<String> ids_) {

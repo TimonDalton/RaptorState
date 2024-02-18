@@ -3,6 +3,7 @@ import 'package:giglee_frontend_state_management_iterations/models/dataHelper.da
 import 'package:giglee_frontend_state_management_iterations/models/dataModels.dart';
 import 'package:giglee_frontend_state_management_iterations/widgets/WrappedM2.dart';
 import 'package:giglee_frontend_state_management_iterations/widgets/WrappedM1.dart';
+import 'package:giglee_frontend_state_management_iterations/widgets/WrappedM0.dart';
 import 'package:giglee_frontend_state_management_iterations/widgets/DataManagerWidget.dart';
 import 'package:giglee_frontend_state_management_iterations/widgets/DataRequestHandler.dart';
 
@@ -70,7 +71,7 @@ class _InputGridState extends State<InputGrid> {
                   dataItemList,
                   DataItemBuilders(
                     dataBuilder: (dataItemValue) =>
-                        M2WrappedWidge(dataItemValue),
+                        M0WrappedWidge(dataItemValue),
                     waitingWidget: Text('Waiting M0'),
                     errorWidget: Text('Error M0'),
                   ),
