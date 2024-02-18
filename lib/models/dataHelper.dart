@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:giglee_frontend_state_management_iterations/backend_com/backendSim.dart';
@@ -13,72 +14,53 @@ export './localPathId.dart';
 export './localRequests.dart';
 
 class DataItem<T> {
-  List<Updater> updaters;
+  ValueTracker<T> valueTracker = ValueTracker<T>();
   String internalIdPath;
-  ValueStore<T> valueStore;
   List<RequestHolder> childrenRequests = [];
   List<DataItem> children = [];
 
   DataItem({
-    required this.updaters,
     required this.internalIdPath,
-    required this.valueStore,
   });
+  T getValue() {
+    return valueTracker.value!;
+  }
 
   setData(T newData) {
-    //todo plan: What happens when widget is offscreen? How do I know what to rebuild?
-    //idea: map widgets to their keys, only update what is the newest. Set some of them to should update
-    //on next reload
-    for (int i = 0; i < updaters.length; i++) {
-      updaters[i].widgetSetter(newData);
-    }
-    updateListeningWidgets();
+    valueTracker.updateWithNewValue(newData);
+  }
+
+  setWithJson(dynamic json) {
+    valueTracker.updateWithJsonData(json);
   }
 
   String getKey() => internalIdPath.split('/').last;
-  updateListeningWidgets() {
-    for (int i = 0; i < updaters.length; i++) {
-      updaters[i].updateWithData(valueStore.rawJson);
-    }
-  }
 
   pollForNewData() {}
 
-  static DataItem<T> create<T>(
-      List<Updater> updaters, String internalIdPath, ValueStore<T> valueStore) {
+  static DataItem<T> create<T>(String internalIdPath) {
     return DataItem<T>(
-      valueStore: valueStore,
       internalIdPath: internalIdPath,
-      updaters: updaters,
     );
   }
 }
 
-class ValueStore<T> {
+class ValueTracker<T> {
+  ValueTracker();
   T? value;
-  Map<String, dynamic> rawJson = {};
-  ValueStore({this.value});
-  processJson([dynamic? newJson]) {
-    if (newJson != null) {
-      rawJson = newJson;
-    }
-    value = typeMatchedFromJson(T)(rawJson);
+  final _controller = StreamController<T>();
+  Stream<T> get stream => _controller.stream.asBroadcastStream();
+
+  updateWithNewValue(T data) {
+    value = data;
+    _controller.sink.add(data);
   }
 
-  setAndUpdateJson(T newValue) {}
-}
-
-class Updater<T> {
-  void Function(dynamic newVal) widgetSetter;
-  Updater(this.widgetSetter);
-  updateWithData(dynamic data) {
-    print('Doing updateWithData');
-    if (data is T) {
-      widgetSetter(data as T);
-    } else {
-      T newVal = typeMatchedFromJson(T)(data);
-      widgetSetter(newVal);
-    }
+  updateWithJsonData(dynamic data) {
+    print('Decoding Data of type: ${data.runtimeType} with data ${data}');
+    T newVal = typeMatchedFromJson(T)(data);
+    _controller.sink.add(newVal);
+    value = newVal;
   }
 }
 
@@ -166,9 +148,9 @@ class LocalDataStore {
           print('Adding id to reqHolder: ${newId}');
           reqHolder.ids.add(newId);
         }
-        dataItems[newId] = createTypedDataItem(branch['type'], [], newId);
+        dataItems[newId] = createTypedDataItem(branch['type'], newId);
         print('Sending to process Json: ${ret}');
-        dataItems[newId]!.valueStore.processJson(ret);
+        dataItems[newId]!.setWithJson(ret);
         dataItems[newId]!.children = newChildren;
 
         throwChildrenUpTree([dataItems[newId]!]);

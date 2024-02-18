@@ -13,7 +13,8 @@ class M0 implements RequestableModel {
   static M0 fromJson(Map<String, dynamic> json) {
     List<M0_Child> children = [];
     (json['children'] as List<dynamic>).forEach((el) {
-      children.add(LocalDataStore.dataItems[el['M0_Child']]!.valueStore.value);
+      children
+          .add(LocalDataStore.dataItems[el['M0_Child']]!.valueTracker.value);
     });
 
     return M0(value: children);
@@ -31,8 +32,8 @@ class M0_Child implements RequestableModel {
   static M0_Child fromJson(Map<String, dynamic> json) {
     List<M0_GrandChild> children = [];
     (json['children'] as List<dynamic>).forEach((el) {
-      children
-          .add(LocalDataStore.dataItems[el['M0_Grandchild']]!.valueStore.value);
+      children.add(
+          LocalDataStore.dataItems[el['M0_Grandchild']]!.valueTracker.value);
     });
     return M0_Child(value: children);
   }

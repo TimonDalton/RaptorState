@@ -26,7 +26,7 @@ class _M0WrappedWidgeState<T> extends State<M0WrappedWidge> {
     return InkWell(
       onTap: () {},
       child: Container(
-        width: 18 * vw,
+        width: 36 * vw,
         height: 18 * vw,
         color: Colors.red,
         child: Wrap(
@@ -66,11 +66,11 @@ class _M0_ChildWrappedWidgeState<T> extends State<M0_ChildWrappedWidge> {
     DataItem thisDi = LocalDataStore.dataItems[getParentId(context)]!;
     return InkWell(
       onTap: () {
-        thisDi.setData(thisDi.valueStore.value + 1);
+        thisDi.setData(thisDi.valueTracker.value + 1);
       },
       child: Container(
         color: Colors.blueGrey,
-        width: 8 * vw,
+        width: 16 * vw,
         height: 8 * vw,
         child: Wrap(
           children: DataManagers.fromParent(
@@ -108,14 +108,17 @@ class _M0_GrandchildWrappedWidgeState<T>
   @override
   Widget build(BuildContext context) {
     double vw = MediaQuery.of(context).size.width / 100.00;
-    DataItem thisDi = LocalDataStore.dataItems[getParentId(context)]!;
+    DataItem<M0_GrandChild> thisDi = LocalDataStore
+        .dataItems[getParentId(context)]! as DataItem<M0_GrandChild>;
     return InkWell(
       onTap: () {
-        thisDi.setData(thisDi.valueStore.value + 1);
+        print(
+            'Inc on ${thisDi.internalIdPath} with value ${thisDi.getValue().value}');
+        thisDi.setData(M0_GrandChild(value: thisDi.getValue().value + 1));
       },
       child: Container(
         color: Colors.blueGrey,
-        width: 4 * vw,
+        width: 8 * vw,
         height: 4 * vw,
         child: Text(
           widget.m0_grandchild.value.toString(),

@@ -15,7 +15,7 @@ dynamic Function(Map<String, dynamic>) typeMatchedFromJson(Type t) {
     case M0_GrandChild:
       return M0_GrandChild.fromJson;
     default:
-      throw Exception('Unkown type ${t.toString()}');
+      throw Exception('Unknown type ${t.toString()}');
   }
 }
 

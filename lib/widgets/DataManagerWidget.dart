@@ -8,7 +8,6 @@ import 'DataRequestHandler.dart';
 class DataManagerWidget<RequestableModel> extends StatefulWidget {
   final DataItemBuilders builders;
   DataItem<RequestableModel> dataItem;
-  bool initialised = false;
 
   DataManagerWidget({
     required this.builders,
@@ -29,24 +28,6 @@ class _DataManagerWidgetState<RequestableModel>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.initialised) {
-      Updater updater = Updater<RequestableModel>(
-        //setter
-        (newVal) {
-          setState(() {
-            widget.dataItem.valueStore.value = newVal as RequestableModel;
-            print(
-                'M2 Set State Called: OLD VALUE: ${widget.dataItem.valueStore.value}, NEW VALUE: ${newVal}');
-          });
-        },
-      );
-      widget.dataItem.updaters.add(updater);
-      bool noError = true;
-      if (noError) {
-        widget.initialised = true;
-      }
-    }
-
     return PathNamingWidget(
       key: UniqueKey(),
       path: PathNamingWidget.of(context) == null
@@ -54,11 +35,28 @@ class _DataManagerWidgetState<RequestableModel>
           : PathNamingWidget.of(context)!.path +
               '/' +
               widget.dataItem.internalIdPath,
-      child: (widget.dataItem.valueStore.value != null)
-          ? widget.builders.dataBuilder(widget.dataItem.valueStore.value)
-          : (widget.dataItem.valueStore.rawJson == {})
-              ? widget.builders.waitingWidget
-              : widget.builders.errorWidget,
+      child: StreamBuilder(
+        stream: widget.dataItem.valueTracker.stream,
+        builder: (context, snapshot) {
+          print('Stream State of ${widget.dataItem.internalIdPath} ');
+          print('');
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return widget.builders.waitingWidget;
+          }
+          if (snapshot.hasData) {
+            return widget.builders.dataBuilder(widget.dataItem.getValue());
+          } else if (snapshot.hasError) {
+            return widget.builders.errorWidget;
+          }
+
+          return widget.builders.errorWidget;
+        },
+      ),
+      // (widget.dataItem.valueStore.value != null)
+      //     ? widget.builders.dataBuilder(widget.dataItem.valueStore.value)
+      //     : (widget.dataItem.valueStore.rawJson == {})
+      //         ? widget.builders.waitingWidget
+      //         : widget.builders.errorWidget,
     );
   }
 }

@@ -66,7 +66,7 @@ class _M1_ChildWrappedWidgeState<T> extends State<M1_ChildWrappedWidge> {
     DataItem thisDi = LocalDataStore.dataItems[getParentId(context)]!;
     return InkWell(
       onTap: () {
-        thisDi.setData(thisDi.valueStore.value + 1);
+        thisDi.setData(M1_Child(value: thisDi.getValue().value + 1));
       },
       child: Container(
         color: Colors.blueGrey,

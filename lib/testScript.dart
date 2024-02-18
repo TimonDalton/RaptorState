@@ -21,15 +21,14 @@ void testScript() async {
   // print('ids from rh requesting M1/* ${rhm1.ids}');
   // keys = LocalDataStore.dataItems.keys.toList();
   // print('LocalDataStore Key length: ${keys.length}');
-  keys.forEach(
-      (key) => print((LocalDataStore.dataItems[key]!.valueStore.value).value));
+  // keys.forEach((key) =>
+  //     print((LocalDataStore.dataItems[key]!.valueTracker.value).value));
   RequestHolder rhm0 = RequestHolder('M0/*');
   await rhm0.fetch();
   print('ids from rh requesting M0/* ${rhm0.ids}');
   keys = LocalDataStore.dataItems.keys.toList();
   print('LocalDataStore Key length: ${keys.length}');
-  keys.forEach(
-      (key) => print((LocalDataStore.dataItems[key]!.valueStore.value).value));
+  keys.forEach((key) => print((LocalDataStore.dataItems[key]!.getValue())));
 
   print(
       '-----------------------------------------------------------------------------------------');

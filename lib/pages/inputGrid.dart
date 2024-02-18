@@ -21,7 +21,7 @@ class _InputGridState extends State<InputGrid> {
         child: Wrap(
       children: [
         DataRequestHandler(
-          RequestHolder('M2/*'),
+          'M2/*',
           RequestDataBuilder(
             dataItemListBuilder: (dataItemList) {
               return Column(
@@ -43,7 +43,7 @@ class _InputGridState extends State<InputGrid> {
           ),
         ),
         DataRequestHandler(
-          RequestHolder('M1/*'),
+          'M1/*',
           RequestDataBuilder(
             dataItemListBuilder: (dataItemList) {
               return Column(
@@ -63,7 +63,7 @@ class _InputGridState extends State<InputGrid> {
           ),
         ),
         DataRequestHandler(
-          RequestHolder('M0/*'),
+          'M0/*',
           RequestDataBuilder(
             dataItemListBuilder: (dataItemList) {
               return Column(

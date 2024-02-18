@@ -10,11 +10,13 @@ export './DataManagerWidget.dart';
 
 class DataRequestHandler extends StatefulWidget {
   RequestDataBuilder builders;
-  RequestHolder requestHolder;
+  late RequestHolder requestHolder;
   DataRequestHandler(
-    this.requestHolder,
+    String request,
     this.builders,
-  );
+  ) {
+    requestHolder = RequestHolder(request);
+  }
   @override
   State<DataRequestHandler> createState() => _DataRequestHandlerState();
 }
